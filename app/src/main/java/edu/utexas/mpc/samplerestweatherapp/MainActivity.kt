@@ -55,7 +55,7 @@ class MainActivity : AppCompatActivity() {
                     mostRecentWeatherResult = gson.fromJson(response, WeatherResult::class.java)
                     textView.text = mostRecentWeatherResult.weather.get(0).main
                     cityView.text = mostRecentWeatherResult.name
-                    tempView.text = mostRecentWeatherResult.temp
+                    tempView.text = mostRecentWeatherResult.main.temp.toString() + "°F"
                     val icon = mostRecentWeatherResult.weather.get(0).icon
                     requestIcon(icon)
                 },
