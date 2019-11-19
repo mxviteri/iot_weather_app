@@ -13,9 +13,17 @@ import com.android.volley.toolbox.Volley
 import com.google.gson.Gson
 import com.squareup.picasso.Picasso
 import kotlinx.android.synthetic.main.activity_main.*
+import org.eclipse.paho.android.service.MqttAndroidClient
+import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken
+import org.eclipse.paho.client.mqttv3.MqttCallbackExtended
+import org.eclipse.paho.client.mqttv3.MqttMessage
 
 class MainActivity : AppCompatActivity() {
 
+    val serverUri = "tcp://192.168.4.1:1883"
+    val clientId = "EmergingTechMQTTClient"
+    val subscribeTopic = "testTopic2"
+    val publishTopic = "testTopic1"
 
     // I'm using lateinit for these widgets because I read that repeated calls to findViewById
     // are energy intensive
@@ -24,10 +32,12 @@ class MainActivity : AppCompatActivity() {
     lateinit var tempView: TextView
     lateinit var imageView: ImageView
     lateinit var retrieveButton: Button
+    lateinit var syncButton: Button
 
     lateinit var queue: RequestQueue
     lateinit var gson: Gson
     lateinit var mostRecentWeatherResult: WeatherResult
+    lateinit var mqttAndroidClient: MqttAndroidClient
 
 
     override fun onCreate(savedInstanceState: Bundle?) {
@@ -39,12 +49,45 @@ class MainActivity : AppCompatActivity() {
         tempView = this.findViewById(R.id.temp)
         imageView = this.findViewById(R.id.imageView)
         retrieveButton = this.findViewById(R.id.retrieveButton)
-
         // when the user presses the syncbutton, this method will get called
         retrieveButton.setOnClickListener({ requestWeather() })
-
         queue = Volley.newRequestQueue(this)
         gson = Gson()
+
+        syncButton = this.findViewById(R.id.syncButton)
+        syncButton.setOnClickListener({ syncWithPi() })
+        mqttAndroidClient = MqttAndroidClient(getApplicationContext(), serverUri, clientId);
+
+        // when things happen in the mqtt client, these callbacks will be called
+        mqttAndroidClient.setCallback(object: MqttCallbackExtended {
+
+            // when the client is successfully connected to the broker, this method gets called
+            override fun connectComplete(reconnect: Boolean, serverURI: String?) {
+                println("Connection Complete!!")
+                // this subscribes the client to the subscribe topic
+                mqttAndroidClient.subscribe(subscribeTopic, 0)
+                val message = MqttMessage()
+                message.payload = ("hello world").toByteArray()
+
+                // this publishes a message to the publish topic
+                mqttAndroidClient.publish(publishTopic, message)
+            }
+
+            // this method is called when a message is received that fulfills a subscription
+            override fun messageArrived(topic: String?, message: MqttMessage?) {
+                println(message)
+                textView.text = message.toString()
+            }
+
+            override fun connectionLost(cause: Throwable?) {
+                println("Connection Lost")
+            }
+
+            // this method is called when the client succcessfully publishes to the broker
+            override fun deliveryComplete(token: IMqttDeliveryToken?) {
+                println("Delivery Complete")
+            }
+        })
     }
 
     fun requestWeather(){
@@ -67,6 +110,12 @@ class MainActivity : AppCompatActivity() {
     fun requestIcon(icon: String) {
         val url = "http://openweathermap.org/img/wn/" + icon + "@2x.png"
         Picasso.get().load(url).into(imageView)
+    }
+
+    // this method just connects the paho mqtt client to the broker
+    fun syncWithPi(){
+        println("+++++++ Connecting...")
+        mqttAndroidClient.connect()
     }
 }
 
