@@ -132,7 +132,7 @@ class MainActivity : AppCompatActivity() {
                     val temp_min = mostRecentWeatherResult.main.temp_min.toString()
                     val precip = mostRecentWeatherResult.rain
 
-                    weatherData = temp_max + "," + temp_min + "," + precip.toString()
+                    weatherData = "w," + temp_max + "," + temp_min + "," + precip.toString()
                     val icon = mostRecentWeatherResult.weather.get(0).icon
                     requestIcon(icon)
                 },
@@ -164,7 +164,7 @@ class MainActivity : AppCompatActivity() {
                         }
                         precip.add(f.rain)
                     }
-                    forecastData = temp_max.toString() + "," + temp_min.toString() + "," + precip.toString()
+                    forecastData = "f-" + temp_max.toString() + "-" + temp_min.toString() + "-" + precip.toString()
                 },
                 com.android.volley.Response.ErrorListener { println("******That didn't work!") }) {}
         // Add the request to the RequestQueue.
