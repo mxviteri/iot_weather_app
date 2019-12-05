@@ -14,12 +14,14 @@ import android.widget.Button
 import android.widget.ImageView
 import android.widget.TextView
 import android.support.annotation.RequiresApi
+import android.text.TextUtils.split
 import android.widget.Toast
 import com.android.volley.RequestQueue
 import com.android.volley.toolbox.StringRequest
 import com.android.volley.toolbox.Volley
 import com.google.gson.Gson
 import com.squareup.picasso.Picasso
+import kotlinx.android.synthetic.main.activity_main.*
 import org.eclipse.paho.android.service.MqttAndroidClient
 import org.eclipse.paho.client.mqttv3.IMqttDeliveryToken
 import org.eclipse.paho.client.mqttv3.MqttCallbackExtended
@@ -40,11 +42,14 @@ class MainActivity : AppCompatActivity() {
     lateinit var tempView: TextView
     lateinit var stepsView: TextView
     lateinit var imageView: ImageView
+    lateinit var predsView: TextView
     lateinit var retrieveButton: Button
     lateinit var forecastButton: Button
     lateinit var sendButton: Button
     lateinit var syncButton: Button
     lateinit var wifiButton: Button
+    lateinit var predsButton: Button
+    lateinit var testModelButton: Button
 
     lateinit var queue: RequestQueue
     lateinit var gson: Gson
@@ -64,10 +69,15 @@ class MainActivity : AppCompatActivity() {
         tempView = this.findViewById(R.id.temp)
         stepsView = this.findViewById(R.id.stepsView)
         imageView = this.findViewById(R.id.imageView)
+        predsView = this.findViewById(R.id.predsView)
         retrieveButton = this.findViewById(R.id.retrieveButton)
         retrieveButton.setOnClickListener({ requestAll() })
         forecastButton = this.findViewById(R.id.forecastButton)
         forecastButton.setOnClickListener({ sendForecast() })
+        predsButton = this.findViewById(R.id.predsButton)
+        predsButton.setOnClickListener({ sendToModel() })
+        testModelButton = this.findViewById(R.id.testModel)
+        testModelButton.setOnClickListener({ testModel() })
 
         queue = Volley.newRequestQueue(this)
         gson = Gson()
@@ -94,7 +104,13 @@ class MainActivity : AppCompatActivity() {
             // this method is called when a message is received that fulfills a subscription
             override fun messageArrived(topic: String?, message: MqttMessage?) {
                 println(message)
-                stepsView.text = message.toString()
+                val parts = message.toString().split(":")
+                if (parts[0] == "model") {
+                    predsView.text = parts[1].toString()
+                } else {
+                    stepsView.text = parts[1].toString()
+                }
+
             }
 
             override fun connectionLost(cause: Throwable?) {
@@ -189,6 +205,45 @@ class MainActivity : AppCompatActivity() {
     fun sendForecast(){
         val message = MqttMessage()
         message.payload = (forecastData).toByteArray()
+        mqttAndroidClient.publish(publishTopic, message)
+    }
+
+    fun randomNumber(to: Int, from: Int): Int {
+        val random = Random()
+        return random.nextInt(to - from) + from
+    }
+
+    fun createWeather(): Any {
+        val w: MutableMap<String, Any> = mutableMapOf()
+        val max = randomNumber(89, 55)
+        w.set("temp_max", max)
+        w.set("temp_min", randomNumber(max - 5, 50))
+        w.set("precip", randomNumber(3, 1))
+        return w
+    }
+
+    fun createSteps(): Any {
+        val s: MutableMap<String, Any> = mutableMapOf()
+        s.set("predicted", randomNumber(12000, 3000))
+        s.set("actual", randomNumber(12000, 3000))
+        return s
+    }
+
+    fun sendToModel() {
+        val t: MutableMap<String, Any> = mutableMapOf()
+        t.set("weather", createWeather())
+        t.set("steps", createSteps())
+        val json = gson.toJson((t))
+
+        val message = MqttMessage()
+        message.payload = (json).toByteArray()
+        mqttAndroidClient.publish(publishTopic, message)
+    }
+
+    fun testModel() {
+        val pred = forecastData.replaceFirst("f", "t")
+        val message = MqttMessage()
+        message.payload = (pred).toByteArray()
         mqttAndroidClient.publish(publishTopic, message)
     }
 
