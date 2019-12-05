@@ -47,6 +47,7 @@ class MainFragment : Fragment() {
     lateinit var wifiButton: Button
     lateinit var predsButton: Button
     lateinit var testModelButton: Button
+    lateinit var bmrButton: Button
 
     lateinit var queue: RequestQueue
     lateinit var gson: Gson
@@ -65,7 +66,7 @@ class MainFragment : Fragment() {
         cityView = view.findViewById(R.id.city)
         tempView = view.findViewById(R.id.temp)
         stepsView = view.findViewById(R.id.stepsView)
-        imageView = view.findViewById(R.id.imageView)
+        imageView = view.findViewById<ImageView>(R.id.imageView)
         predsView = view.findViewById(R.id.predsView)
         retrieveButton = view.findViewById(R.id.retrieveButton)
         retrieveButton.setOnClickListener({ requestAll() })
@@ -75,6 +76,8 @@ class MainFragment : Fragment() {
         predsButton.setOnClickListener({ sendToModel() })
         testModelButton = view.findViewById(R.id.testModel)
         testModelButton.setOnClickListener({ testModel() })
+        bmrButton = view.findViewById(R.id.bmr)
+        bmrButton.setOnClickListener({ navigateToBMR() })
 
         queue = Volley.newRequestQueue(activity)
         gson = Gson()
@@ -121,6 +124,18 @@ class MainFragment : Fragment() {
 
 
         return view
+    }
+
+    fun navigateToBMR(){
+        val fragManager = fragmentManager
+        if (fragManager != null) {
+            val transaction = fragManager
+                    .beginTransaction()
+                    .replace(R.id.container, BMRFragment())
+                    .addToBackStack("bmr_fragment")
+
+            transaction.commit()
+        }
     }
 
 
