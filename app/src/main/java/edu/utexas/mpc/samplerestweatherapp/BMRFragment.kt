@@ -24,6 +24,7 @@ class BMRFragment : Fragment() {
     val publishTopic = "weather"
     lateinit var mqttAndroidClient: MqttAndroidClient
 
+
     lateinit var check_goal_button: Button
     lateinit var weight: EditText
     lateinit var height: EditText
@@ -41,6 +42,11 @@ class BMRFragment : Fragment() {
         mainButton.setOnClickListener({ navigateToMain() })
         check_goal_button = view.findViewById(R.id.check_goal_button)
         check_goal_button.setOnClickListener({ calculateBMR() })
+        weight = view.findViewById(R.id.weight)
+        height = view.findViewById(R.id.height)
+        age = view.findViewById(R.id.age)
+        food = view.findViewById(R.id.food)
+
 
         mqttAndroidClient = MqttAndroidClient(context, serverUri, clientId)
 
