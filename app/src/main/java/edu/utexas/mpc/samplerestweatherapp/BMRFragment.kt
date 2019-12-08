@@ -101,7 +101,7 @@ class BMRFragment : Fragment() {
     fun calculateBMR(){
 
         var bmr:Double = 0.0
-        var message: String = ""
+//        var message: String = ""
 
         var weightint = Integer.parseInt(weight.getText().toString())
         var heightint = Integer.parseInt(height.getText().toString())
@@ -121,13 +121,20 @@ class BMRFragment : Fragment() {
 
         bmrData = "c" + gender +  bmr.toString() + foodint.toString()
 
-        sendBmrInfo()
-    }
+        println(bmrData)
 
-
-    fun sendBmrInfo(){
+//        sendBmrInfo(bmrData)
         val message = MqttMessage()
-        message.payload = (bmrData).toByteArray()
+        message.payload = bmrData.toByteArray()
+        println(message.payload)
         mqttAndroidClient.publish(publishTopic, message)
+
     }
+
+
+//    fun sendBmrInfo(incomingData: String){
+//        val message = MqttMessage()
+//        message.payload = (incomingData).toByteArray()
+//        mqttAndroidClient.publish(publishTopic, message)
+//    }
 }
